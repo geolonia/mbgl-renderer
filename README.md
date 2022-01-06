@@ -349,7 +349,7 @@ docker run --rm -p 8080:80 -v $(pwd)/tests/fixtures:/app/tiles consbio/mbgl-rend
 Build your own docker container with name `<image_name>`:
 
 ```
-docker build -t <image_name> -f docker/Dockerfile .
+docker build --platform x86_64 -t <image_name> -f docker/Dockerfile .
 ```
 
 ## Headless servers
