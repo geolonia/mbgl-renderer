@@ -5,7 +5,7 @@ import path from 'path'
 import sharp from 'sharp'
 import zlib from 'zlib'
 import geoViewport from '@mapbox/geo-viewport'
-import mbgl from '@mapbox/mapbox-gl-native'
+import mbgl from '@naturalatlas/mapbox-gl-native'
 import MBTiles from '@mapbox/mbtiles'
 import webRequest from 'request'
 
@@ -17,6 +17,27 @@ const MBTILES_REGEXP = /mbtiles:\/\/(\S+?)(?=[/"]+)/gi
 export const isMapboxURL = url => url.startsWith('mapbox://')
 export const isMapboxStyleURL = url => url.startsWith('mapbox://styles/')
 const isMBTilesURL = url => url.startsWith('mbtiles://')
+
+export const isGeoloniaURL = url => url.startsWith('geolonia://') || url.includes('tileserver.geolonia.com')
+
+// normalize functions derived from: https://github.com/geolonia/embed/blob/master/src/lib/geolonia-map.js
+const normalizeGeoloniaURL = (urlString, token) => {
+    let url = new URL(urlString)
+    if (url.protocol === 'geolonia:' && url.host === 'tiles') {
+        const [ username, tileset ] = url.pathname.split('/')
+        if (username === 'base') {
+            url = new URL(`https://tileserver.geolonia.com/${tileset}/tiles.json`);
+        } else {
+            url = new URL(`https://tileserver.geolonia.com/customtiles/${tileset}/tiles.json`);
+        }
+        url.searchParams.set('key', token);
+    } else if (url.protocol == 'geolonia:' && url.host === 'styles') {
+        url = new URL(`https://cdn.geolonia.com/styles${url.pathname}/ja.json`)
+    } else if (url.host === 'tileserver.geolonia.com') {
+        url.searchParams.set('key', token);
+    }
+    return url.toString();
+}
 
 // normalize functions derived from: https://github.com/mapbox/mapbox-gl-js/blob/master/src/util/mapbox.js
 
@@ -330,7 +351,8 @@ export const render = (style, width = 1024, height = 1024, options) =>
             bounds = null,
             bearing = 0,
             pitch = 0,
-            token = null,
+            mapboxToken = null,
+            geoloniaToken = null,
             ratio = 1,
             padding = 0,
         } = options
@@ -462,8 +484,12 @@ export const render = (style, width = 1024, height = 1024, options) =>
                 const { url, kind } = req
 
                 const isMapbox = isMapboxURL(url)
-                if (isMapbox && !token) {
+                if (isMapbox && !mapboxToken) {
                     throw new Error('ERROR: mapbox access token is required')
+                }
+                const isGeolonia = isGeoloniaURL(url)
+                if (isGeolonia && !geoloniaToken) {
+                    throw new Error('ERROR: Geolonia access token is required')
                 }
 
                 try {
@@ -474,7 +500,12 @@ export const render = (style, width = 1024, height = 1024, options) =>
                                 getLocalTileJSON(tilePath, url, callback)
                             } else if (isMapbox) {
                                 getRemoteAsset(
-                                    normalizeMapboxSourceURL(url, token),
+                                    normalizeMapboxSourceURL(url, mapboxToken),
+                                    callback
+                                )
+                            } else if (isGeolonia) {
+                                getRemoteAsset(
+                                    normalizeGeoloniaURL(url, geoloniaToken),
                                     callback
                                 )
                             } else {
@@ -491,7 +522,12 @@ export const render = (style, width = 1024, height = 1024, options) =>
                                 // JSON is handled within mapbox-gl-native
                                 // since it returns fully resolved tiles!
                                 getRemoteTile(
-                                    normalizeMapboxTileURL(url, token),
+                                    normalizeMapboxTileURL(url, mapboxToken),
+                                    callback
+                                )
+                            } else if (isGeolonia) {
+                                getRemoteTile(
+                                    normalizeGeoloniaURL(url, geoloniaToken),
                                     callback
                                 )
                             } else {
@@ -503,7 +539,7 @@ export const render = (style, width = 1024, height = 1024, options) =>
                             // glyph
                             getRemoteAsset(
                                 isMapbox
-                                    ? normalizeMapboxGlyphURL(url, token)
+                                    ? normalizeMapboxGlyphURL(url, mapboxToken)
                                     : URL.parse(url),
                                 callback
                             )
@@ -513,7 +549,7 @@ export const render = (style, width = 1024, height = 1024, options) =>
                             // sprite image
                             getRemoteAsset(
                                 isMapbox
-                                    ? normalizeMapboxSpriteURL(url, token)
+                                    ? normalizeMapboxSpriteURL(url, mapboxToken)
                                     : URL.parse(url),
                                 callback
                             )
@@ -523,7 +559,7 @@ export const render = (style, width = 1024, height = 1024, options) =>
                             // sprite json
                             getRemoteAsset(
                                 isMapbox
-                                    ? normalizeMapboxSpriteURL(url, token)
+                                    ? normalizeMapboxSpriteURL(url, mapboxToken)
                                     : URL.parse(url),
                                 callback
                             )

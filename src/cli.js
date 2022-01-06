@@ -44,8 +44,12 @@ cli.version(version)
         'Directory containing local mbtiles files to render'
     )
     .option(
-        '--token <mapbox access token>',
+        '--mapbox-token <mapbox access token>',
         'Mapbox access token (required for using Mapbox styles and sources)'
+    )
+    .option(
+        '--geolonia-token <mapbox access token>',
+        'Geolonia access token (required for using Geolonia styles and sources)'
     )
     .parse(process.argv)
 
@@ -59,7 +63,8 @@ const {
     bearing = null,
     pitch = null,
     tiles: tilePath = null,
-    token = null,
+    mapboxToken = null,
+    geoloniaToken = null,
 } = cli
 
 // verify that all arguments are present
@@ -191,7 +196,8 @@ const renderRequest = (style) => {
         bearing,
         pitch,
         tilePath,
-        token,
+        mapboxToken,
+        geoloniaToken,
     })
         .then((data) => {
             fs.writeFileSync(imgFilename, data)
@@ -204,12 +210,12 @@ const renderRequest = (style) => {
 }
 
 if (isMapboxStyle) {
-    if (!token) {
+    if (!mapboxToken) {
         raiseError('mapbox access token is required')
     }
 
     // load the style then call the render function
-    const styleURL = normalizeMapboxStyleURL(styleFilename, token)
+    const styleURL = normalizeMapboxStyleURL(styleFilename, mapboxToken)
     console.log(`requesting mapbox style:${styleFilename}\nfrom: ${styleURL}`)
     webRequest(styleURL, (err, res, body) => {
         if (err) {
