@@ -528,7 +528,7 @@ test('fails on invalid mapbox token', async () => {
             '0,0',
             '-t',
             path.join(__dirname, './fixtures/'),
-            '--token',
+            '--mapbox-token',
             'badtoken',
         ],
         '.'
@@ -677,7 +677,7 @@ testMapbox('resolves from mapbox source', async () => {
             '0,0',
             '-t',
             path.join(__dirname, './fixtures/'),
-            '--token',
+            '--mapbox-token',
             MAPBOX_API_TOKEN,
         ],
         '.'
@@ -708,7 +708,7 @@ testMapbox('resolves from mapbox source with ratio', async () => {
             '0,0',
             '--ratio',
             2,
-            '--token',
+            '--mapbox-token',
             MAPBOX_API_TOKEN,
         ],
         '.'

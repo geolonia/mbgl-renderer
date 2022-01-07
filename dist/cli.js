@@ -26,7 +26,7 @@ var parseListToFloat = function parseListToFloat(text) {
   return text.split(',').map(Number);
 };
 
-_commander["default"].version(_package.version).name('mbgl-render').usage('<style.json> <img_filename> <width> <height> [options]').description('Export a Mapbox GL map to image.  You must provide either center and zoom, or bounds.').arguments('<style.json> <img_filename> <width> <height>').option('-c, --center <longitude,latitude>', 'center of map (NO SPACES)', parseListToFloat).option('-z, --zoom <n>', 'Zoom level', parseFloat).option('-r, --ratio <n>', 'Pixel ratio', parseInt).option('-b, --bounds <west,south,east,north>', 'Bounds (NO SPACES)', parseListToFloat).option('--padding <padding>', 'Number of pixels to add to the inside of each edge of the image.\nCan only be used with bounds option.', parseInt).option('--bearing <degrees>', 'Bearing (0-360)', parseFloat).option('--pitch <degrees>', 'Pitch (0-60)', parseFloat).option('-t, --tiles <mbtiles_path>', 'Directory containing local mbtiles files to render').option('--token <mapbox access token>', 'Mapbox access token (required for using Mapbox styles and sources)').parse(process.argv);
+_commander["default"].version(_package.version).name('mbgl-render').usage('<style.json> <img_filename> <width> <height> [options]').description('Export a Mapbox GL map to image.  You must provide either center and zoom, or bounds.').arguments('<style.json> <img_filename> <width> <height>').option('-c, --center <longitude,latitude>', 'center of map (NO SPACES)', parseListToFloat).option('-z, --zoom <n>', 'Zoom level', parseFloat).option('-r, --ratio <n>', 'Pixel ratio', parseInt).option('-b, --bounds <west,south,east,north>', 'Bounds (NO SPACES)', parseListToFloat).option('--padding <padding>', 'Number of pixels to add to the inside of each edge of the image.\nCan only be used with bounds option.', parseInt).option('--bearing <degrees>', 'Bearing (0-360)', parseFloat).option('--pitch <degrees>', 'Pitch (0-60)', parseFloat).option('-t, --tiles <mbtiles_path>', 'Directory containing local mbtiles files to render').option('--mapbox-token <mapbox access token>', 'Mapbox access token (required for using Mapbox styles and sources)').option('--geolonia-token <mapbox access token>', 'Geolonia access token (required for using Geolonia styles and sources)').parse(process.argv);
 
 var _cli$args = (0, _slicedToArray2["default"])(_commander["default"].args, 4),
     styleFilename = _cli$args[0],
@@ -49,8 +49,10 @@ var _cli$args = (0, _slicedToArray2["default"])(_commander["default"].args, 4),
     pitch = _cli$pitch === void 0 ? null : _cli$pitch,
     _cli$tiles = _commander["default"].tiles,
     tilePath = _cli$tiles === void 0 ? null : _cli$tiles,
-    _cli$token = _commander["default"].token,
-    token = _cli$token === void 0 ? null : _cli$token; // verify that all arguments are present
+    _cli$mapboxToken = _commander["default"].mapboxToken,
+    mapboxToken = _cli$mapboxToken === void 0 ? null : _cli$mapboxToken,
+    _cli$geoloniaToken = _commander["default"].geoloniaToken,
+    geoloniaToken = _cli$geoloniaToken === void 0 ? null : _cli$geoloniaToken; // verify that all arguments are present
 
 
 if (!styleFilename) {
@@ -174,7 +176,8 @@ var renderRequest = function renderRequest(style) {
     bearing: bearing,
     pitch: pitch,
     tilePath: tilePath,
-    token: token
+    mapboxToken: mapboxToken,
+    geoloniaToken: geoloniaToken
   }).then(function (data) {
     _fs["default"].writeFileSync(imgFilename, data);
 
@@ -186,12 +189,12 @@ var renderRequest = function renderRequest(style) {
 };
 
 if (isMapboxStyle) {
-  if (!token) {
+  if (!mapboxToken) {
     raiseError('mapbox access token is required');
   } // load the style then call the render function
 
 
-  var styleURL = (0, _render.normalizeMapboxStyleURL)(styleFilename, token);
+  var styleURL = (0, _render.normalizeMapboxStyleURL)(styleFilename, mapboxToken);
   console.log("requesting mapbox style:".concat(styleFilename, "\nfrom: ").concat(styleURL));
   (0, _request["default"])(styleURL, function (err, res, body) {
     if (err) {

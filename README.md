@@ -202,7 +202,7 @@ render(style, width, height, { bounds, token: '<your access token>' })
     --bearing <degrees>                   Bearing in degrees (0-360)
     --pitch <degrees>                     Pitch in degrees (0-60)
     -t, --tiles <mbtiles_path>            Directory containing local mbtiles files to render
-    --token <mapbox access token>         Mapbox access token (required for using Mapbox styles and sources)
+    --mapbox-token <mapbox access token>         Mapbox access token (required for using Mapbox styles and sources)
     -h, --help                            output usage information
 ```
 
@@ -233,7 +233,7 @@ mbgl-render tests/fixtures/example-style-mbtiles-source-vector.json test.png 102
 To use an Mapbox hosted style (see attribution above!):
 
 ```
-mbgl-render mapbox://styles/mapbox/outdoors-v10 test.png 1024 1024 -c 0,0 -z 0 --token <your mapbox token>
+mbgl-render mapbox://styles/mapbox/outdoors-v10 test.png 1024 1024 -c 0,0 -z 0 --mapbox-token <your mapbox token>
 ```
 
 Note: support for Mapbox hosted styles is still considered experimental.

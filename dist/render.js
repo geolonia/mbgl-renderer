@@ -5,7 +5,7 @@ var _interopRequireDefault = require("@babel/runtime/helpers/interopRequireDefau
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-exports.render = exports.normalizeMapboxStyleURL = exports.normalizeMapboxSpriteURL = exports.normalizeMapboxGlyphURL = exports.isMapboxURL = exports.isMapboxStyleURL = exports["default"] = void 0;
+exports.render = exports.normalizeMapboxStyleURL = exports.normalizeMapboxSpriteURL = exports.normalizeMapboxGlyphURL = exports.isMapboxURL = exports.isMapboxStyleURL = exports.isGeoloniaURL = exports["default"] = void 0;
 
 var _toConsumableArray2 = _interopRequireDefault(require("@babel/runtime/helpers/toConsumableArray"));
 
@@ -21,7 +21,7 @@ var _zlib = _interopRequireDefault(require("zlib"));
 
 var _geoViewport = _interopRequireDefault(require("@mapbox/geo-viewport"));
 
-var _mapboxGlNative = _interopRequireDefault(require("@mapbox/mapbox-gl-native"));
+var _mapboxGlNative = _interopRequireDefault(require("@naturalatlas/mapbox-gl-native"));
 
 var _mbtiles = _interopRequireDefault(require("@mapbox/mbtiles"));
 
@@ -48,6 +48,38 @@ exports.isMapboxStyleURL = isMapboxStyleURL;
 
 var isMBTilesURL = function isMBTilesURL(url) {
   return url.startsWith('mbtiles://');
+};
+
+var isGeoloniaURL = function isGeoloniaURL(url) {
+  return url.startsWith('geolonia://') || url.includes('tileserver.geolonia.com');
+}; // normalize functions derived from: https://github.com/geolonia/embed/blob/master/src/lib/geolonia-map.js
+
+
+exports.isGeoloniaURL = isGeoloniaURL;
+
+var normalizeGeoloniaURL = function normalizeGeoloniaURL(urlString, token) {
+  var url = new _url["default"](urlString);
+
+  if (url.protocol === 'geolonia:' && url.host === 'tiles') {
+    var _url$pathname$split = url.pathname.split('/'),
+        _url$pathname$split2 = (0, _slicedToArray2["default"])(_url$pathname$split, 2),
+        username = _url$pathname$split2[0],
+        tileset = _url$pathname$split2[1];
+
+    if (username === 'base') {
+      url = new _url["default"]("https://tileserver.geolonia.com/".concat(tileset, "/tiles.json"));
+    } else {
+      url = new _url["default"]("https://tileserver.geolonia.com/customtiles/".concat(tileset, "/tiles.json"));
+    }
+
+    url.searchParams.set('key', token);
+  } else if (url.protocol == 'geolonia:' && url.host === 'styles') {
+    url = new _url["default"]("https://cdn.geolonia.com/styles".concat(url.pathname, "/ja.json"));
+  } else if (url.host === 'tileserver.geolonia.com') {
+    url.searchParams.set('key', token);
+  }
+
+  return url.toString();
 }; // normalize functions derived from: https://github.com/mapbox/mapbox-gl-js/blob/master/src/util/mapbox.js
 
 /**
@@ -394,8 +426,10 @@ var render = function render(style) {
         bearing = _options$bearing === void 0 ? 0 : _options$bearing,
         _options$pitch = options.pitch,
         pitch = _options$pitch === void 0 ? 0 : _options$pitch,
-        _options$token = options.token,
-        token = _options$token === void 0 ? null : _options$token,
+        _options$mapboxToken = options.mapboxToken,
+        mapboxToken = _options$mapboxToken === void 0 ? null : _options$mapboxToken,
+        _options$geoloniaToke = options.geoloniaToken,
+        geoloniaToken = _options$geoloniaToke === void 0 ? null : _options$geoloniaToke,
         _options$ratio = options.ratio,
         ratio = _options$ratio === void 0 ? 1 : _options$ratio,
         _options$padding = options.padding,
@@ -507,8 +541,14 @@ var render = function render(style) {
             kind = req.kind;
         var isMapbox = isMapboxURL(url);
 
-        if (isMapbox && !token) {
+        if (isMapbox && !mapboxToken) {
           throw new Error('ERROR: mapbox access token is required');
+        }
+
+        var isGeolonia = isGeoloniaURL(url);
+
+        if (isGeolonia && !geoloniaToken) {
+          throw new Error('ERROR: Geolonia access token is required');
         }
 
         try {
@@ -519,7 +559,9 @@ var render = function render(style) {
                 if (isMBTilesURL(url)) {
                   getLocalTileJSON(tilePath, url, callback);
                 } else if (isMapbox) {
-                  getRemoteAsset(normalizeMapboxSourceURL(url, token), callback);
+                  getRemoteAsset(normalizeMapboxSourceURL(url, mapboxToken), callback);
+                } else if (isGeolonia) {
+                  getRemoteAsset(normalizeGeoloniaURL(url, geoloniaToken), callback);
                 } else {
                   getRemoteAsset(url, callback);
                 }
@@ -536,7 +578,9 @@ var render = function render(style) {
                   // This seems to be due to a bug in how the mapbox tile
                   // JSON is handled within mapbox-gl-native
                   // since it returns fully resolved tiles!
-                  getRemoteTile(normalizeMapboxTileURL(url, token), callback);
+                  getRemoteTile(normalizeMapboxTileURL(url, mapboxToken), callback);
+                } else if (isGeolonia) {
+                  getRemoteTile(normalizeGeoloniaURL(url, geoloniaToken), callback);
                 } else {
                   getRemoteTile(url, callback);
                 }
@@ -547,21 +591,21 @@ var render = function render(style) {
             case 4:
               {
                 // glyph
-                getRemoteAsset(isMapbox ? normalizeMapboxGlyphURL(url, token) : _url["default"].parse(url), callback);
+                getRemoteAsset(isMapbox ? normalizeMapboxGlyphURL(url, mapboxToken) : _url["default"].parse(url), callback);
                 break;
               }
 
             case 5:
               {
                 // sprite image
-                getRemoteAsset(isMapbox ? normalizeMapboxSpriteURL(url, token) : _url["default"].parse(url), callback);
+                getRemoteAsset(isMapbox ? normalizeMapboxSpriteURL(url, mapboxToken) : _url["default"].parse(url), callback);
                 break;
               }
 
             case 6:
               {
                 // sprite json
-                getRemoteAsset(isMapbox ? normalizeMapboxSpriteURL(url, token) : _url["default"].parse(url), callback);
+                getRemoteAsset(isMapbox ? normalizeMapboxSpriteURL(url, mapboxToken) : _url["default"].parse(url), callback);
                 break;
               }
 
