@@ -21,7 +21,7 @@ var _zlib = _interopRequireDefault(require("zlib"));
 
 var _geoViewport = _interopRequireDefault(require("@mapbox/geo-viewport"));
 
-var _mapboxGlNative = _interopRequireDefault(require("@naturalatlas/mapbox-gl-native"));
+var _mapboxGlNative = _interopRequireDefault(require("@mapbox/mapbox-gl-native"));
 
 var _mbtiles = _interopRequireDefault(require("@mapbox/mbtiles"));
 

@@ -1,4 +1,4 @@
-FROM node:14-buster-slim
+FROM node:10-buster-slim
 
 WORKDIR /app
 
@@ -10,15 +10,19 @@ COPY package*.json /app/
 
 RUN apt-get update && \
   DEBIAN_FRONTEND=noninteractive apt-get -y install \
-  libcairo2-dev \
-  libgles2-mesa-dev \
-  libgbm-dev \
-  libllvm7 \
-  libprotobuf-dev \
-  libxxf86vm-dev \
-  xvfb \
-  curl \
-  x11-utils && \
+    libcairo2-dev \
+    libgles2-mesa-dev \
+    libgbm-dev \
+    libllvm7 \
+    libprotobuf-dev \
+    libxxf86vm-dev \
+    xvfb \
+    curl \
+    x11-utils \
+    libuv1 \
+    libcurl4-gnutls-dev \
+    libjpeg-dev \
+  && \
   rm -rf /var/lib/apt/lists/* && \
   # install node deps, then remove any that are not used in production
   npm install --no-save && \
