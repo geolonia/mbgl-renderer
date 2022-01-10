@@ -2,8 +2,6 @@
 
 var _interopRequireDefault = require("@babel/runtime/helpers/interopRequireDefault");
 
-var _typeof = require("@babel/runtime/helpers/typeof");
-
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
@@ -29,11 +27,7 @@ var _mbtiles = _interopRequireDefault(require("@mapbox/mbtiles"));
 
 var _request = _interopRequireDefault(require("request"));
 
-var _url = _interopRequireWildcard(require("url"));
-
-function _getRequireWildcardCache(nodeInterop) { if (typeof WeakMap !== "function") return null; var cacheBabelInterop = new WeakMap(); var cacheNodeInterop = new WeakMap(); return (_getRequireWildcardCache = function _getRequireWildcardCache(nodeInterop) { return nodeInterop ? cacheNodeInterop : cacheBabelInterop; })(nodeInterop); }
-
-function _interopRequireWildcard(obj, nodeInterop) { if (!nodeInterop && obj && obj.__esModule) { return obj; } if (obj === null || _typeof(obj) !== "object" && typeof obj !== "function") { return { "default": obj }; } var cache = _getRequireWildcardCache(nodeInterop); if (cache && cache.has(obj)) { return cache.get(obj); } var newObj = {}; var hasPropertyDescriptor = Object.defineProperty && Object.getOwnPropertyDescriptor; for (var key in obj) { if (key !== "default" && Object.prototype.hasOwnProperty.call(obj, key)) { var desc = hasPropertyDescriptor ? Object.getOwnPropertyDescriptor(obj, key) : null; if (desc && (desc.get || desc.set)) { Object.defineProperty(newObj, key, desc); } else { newObj[key] = obj[key]; } } } newObj["default"] = obj; if (cache) { cache.set(obj, newObj); } return newObj; }
+var _url = require("url");
 
 /* eslint-disable no-new */
 // sharp must be before zlib and other imports or sharp gets wrong version of zlib and breaks on some servers
@@ -90,37 +84,37 @@ var normalizeGeoloniaURL = function normalizeGeoloniaURL(urlString, token) {
 
 /**
  * Normalize a Mapbox source URL to a full URL
- * @param {string} url - url to mapbox source in style json, e.g. "url": "mapbox://mapbox.mapbox-streets-v7"
+ * @param {string} urlStr - url to mapbox source in style json, e.g. "url": "mapbox://mapbox.mapbox-streets-v7"
  * @param {string} token - mapbox public token
  */
 
 
-var normalizeMapboxSourceURL = function normalizeMapboxSourceURL(url, token) {
-  var urlObject = url.parse(url);
+var normalizeMapboxSourceURL = function normalizeMapboxSourceURL(urlStr, token) {
+  var urlObject = new _url.URL(urlStr);
   urlObject.query = urlObject.query || {};
-  urlObject.pathname = "/v4/".concat(url.split('mapbox://')[1], ".json");
+  urlObject.pathname = "/v4/".concat(urlStr.split('mapbox://')[1], ".json");
   urlObject.protocol = 'https';
   urlObject.host = 'api.mapbox.com';
   urlObject.query.secure = true;
   urlObject.query.access_token = token;
-  return url.format(urlObject);
+  return urlObject.toString();
 };
 /**
  * Normalize a Mapbox tile URL to a full URL
- * @param {string} url - url to mapbox tile in style json or resolved from source
+ * @param {string} urlStr - url to mapbox tile in style json or resolved from source
  * e.g. mapbox://tiles/mapbox.mapbox-streets-v7/1/0/1.vector.pbf
  * @param {string} token - mapbox public token
  */
 
 
-var normalizeMapboxTileURL = function normalizeMapboxTileURL(url, token) {
-  var urlObject = url.parse(url);
+var normalizeMapboxTileURL = function normalizeMapboxTileURL(urlStr, token) {
+  var urlObject = new _url.URL(urlStr);
   urlObject.query = urlObject.query || {};
   urlObject.pathname = "/v4".concat(urlObject.path);
   urlObject.protocol = 'https';
   urlObject.host = 'a.tiles.mapbox.com';
   urlObject.query.access_token = token;
-  return url.format(urlObject);
+  return urlObject.toString();
 };
 /**
  * Normalize a Mapbox style URL to a full URL
@@ -129,8 +123,8 @@ var normalizeMapboxTileURL = function normalizeMapboxTileURL(url, token) {
  */
 
 
-var normalizeMapboxStyleURL = function normalizeMapboxStyleURL(url, token) {
-  var urlObject = url.parse(url);
+var normalizeMapboxStyleURL = function normalizeMapboxStyleURL(urlStr, token) {
+  var urlObject = new _url.URL(urlStr);
   urlObject.query = {
     access_token: token,
     secure: true
@@ -138,11 +132,11 @@ var normalizeMapboxStyleURL = function normalizeMapboxStyleURL(url, token) {
   urlObject.pathname = "styles/v1".concat(urlObject.path);
   urlObject.protocol = 'https';
   urlObject.host = 'api.mapbox.com';
-  return url.format(urlObject);
+  return urlObject.toString();
 };
 /**
  * Normalize a Mapbox sprite URL to a full URL
- * @param {string} url - url to mapbox sprite, e.g. "url": "mapbox://sprites/mapbox/streets-v9.png"
+ * @param {string} urlStr - url to mapbox sprite, e.g. "url": "mapbox://sprites/mapbox/streets-v9.png"
  * @param {string} token - mapbox public token
  *
  * Returns {string} - url, e.g., "https://api.mapbox.com/styles/v1/mapbox/streets-v9/sprite.png?access_token=<token>"
@@ -151,11 +145,11 @@ var normalizeMapboxStyleURL = function normalizeMapboxStyleURL(url, token) {
 
 exports.normalizeMapboxStyleURL = normalizeMapboxStyleURL;
 
-var normalizeMapboxSpriteURL = function normalizeMapboxSpriteURL(url, token) {
-  var extMatch = /(\.png|\.json)$/g.exec(url);
-  var ratioMatch = /(@\d+x)\./g.exec(url);
+var normalizeMapboxSpriteURL = function normalizeMapboxSpriteURL(urlStr, token) {
+  var extMatch = /(\.png|\.json)$/g.exec(urlStr);
+  var ratioMatch = /(@\d+x)\./g.exec(urlStr);
   var trimIndex = Math.min(ratioMatch != null ? ratioMatch.index : Infinity, extMatch.index);
-  var urlObject = url.parse(url.substring(0, trimIndex));
+  var urlObject = new _url.URL(urlStr.substring(0, trimIndex));
   var extPart = extMatch[1];
   var ratioPart = ratioMatch != null ? ratioMatch[1] : '';
   urlObject.query = urlObject.query || {};
@@ -163,11 +157,11 @@ var normalizeMapboxSpriteURL = function normalizeMapboxSpriteURL(url, token) {
   urlObject.pathname = "/styles/v1".concat(urlObject.path, "/sprite").concat(ratioPart).concat(extPart);
   urlObject.protocol = 'https';
   urlObject.host = 'api.mapbox.com';
-  return url.format(urlObject);
+  return urlObject.toString();
 };
 /**
  * Normalize a Mapbox glyph URL to a full URL
- * @param {string} url - url to mapbox sprite, e.g. "url": "mapbox://sprites/mapbox/streets-v9.png"
+ * @param {string} urlStr - url to mapbox sprite, e.g. "url": "mapbox://sprites/mapbox/streets-v9.png"
  * @param {string} token - mapbox public token
  *
  * Returns {string} - url, e.g., "https://api.mapbox.com/styles/v1/mapbox/streets-v9/sprite.png?access_token=<token>"
@@ -176,14 +170,14 @@ var normalizeMapboxSpriteURL = function normalizeMapboxSpriteURL(url, token) {
 
 exports.normalizeMapboxSpriteURL = normalizeMapboxSpriteURL;
 
-var normalizeMapboxGlyphURL = function normalizeMapboxGlyphURL(url, token) {
-  var urlObject = url.parse(url);
+var normalizeMapboxGlyphURL = function normalizeMapboxGlyphURL(urlStr, token) {
+  var urlObject = new _url.URL(urlStr);
   urlObject.query = urlObject.query || {};
   urlObject.query.access_token = token;
   urlObject.pathname = "/fonts/v1".concat(urlObject.path);
   urlObject.protocol = 'https';
   urlObject.host = 'api.mapbox.com';
-  return url.format(urlObject);
+  return urlObject.toString();
 };
 /**
  * Very simplistic function that splits out mbtiles service name from the URL
@@ -597,28 +591,28 @@ var render = function render(style) {
             case 4:
               {
                 // glyph
-                getRemoteAsset(isMapbox ? normalizeMapboxGlyphURL(url, mapboxToken) : url.parse(url), callback);
+                getRemoteAsset(isMapbox ? normalizeMapboxGlyphURL(url, mapboxToken) : new _url.URL(url), callback);
                 break;
               }
 
             case 5:
               {
                 // sprite image
-                getRemoteAsset(isMapbox ? normalizeMapboxSpriteURL(url, mapboxToken) : url.parse(url), callback);
+                getRemoteAsset(isMapbox ? normalizeMapboxSpriteURL(url, mapboxToken) : new _url.URL(url), callback);
                 break;
               }
 
             case 6:
               {
                 // sprite json
-                getRemoteAsset(isMapbox ? normalizeMapboxSpriteURL(url, mapboxToken) : url.parse(url), callback);
+                getRemoteAsset(isMapbox ? normalizeMapboxSpriteURL(url, mapboxToken) : new _url.URL(url), callback);
                 break;
               }
 
             case 7:
               {
                 // image source
-                getRemoteAsset(url.parse(url), callback);
+                getRemoteAsset(new _url.URL(url), callback);
                 break;
               }
 

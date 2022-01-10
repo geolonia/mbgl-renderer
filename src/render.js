@@ -9,7 +9,6 @@ import mbgl from '@mapbox/mapbox-gl-native'
 import MBTiles from '@mapbox/mbtiles'
 import webRequest from 'request'
 
-import url from 'url'
 import { URL } from 'url'
 
 const TILE_REGEXP = RegExp('mbtiles://([^/]+)/(\\d+)/(\\d+)/(\\d+)')
@@ -44,34 +43,34 @@ const normalizeGeoloniaURL = (urlString, token) => {
 
 /**
  * Normalize a Mapbox source URL to a full URL
- * @param {string} url - url to mapbox source in style json, e.g. "url": "mapbox://mapbox.mapbox-streets-v7"
+ * @param {string} urlStr - url to mapbox source in style json, e.g. "url": "mapbox://mapbox.mapbox-streets-v7"
  * @param {string} token - mapbox public token
  */
-const normalizeMapboxSourceURL = (url, token) => {
-    const urlObject = url.parse(url)
+const normalizeMapboxSourceURL = (urlStr, token) => {
+    const urlObject = new URL(urlStr)
     urlObject.query = urlObject.query || {}
-    urlObject.pathname = `/v4/${url.split('mapbox://')[1]}.json`
+    urlObject.pathname = `/v4/${urlStr.split('mapbox://')[1]}.json`
     urlObject.protocol = 'https'
     urlObject.host = 'api.mapbox.com'
     urlObject.query.secure = true
     urlObject.query.access_token = token
-    return url.format(urlObject)
+    return urlObject.toString()
 }
 
 /**
  * Normalize a Mapbox tile URL to a full URL
- * @param {string} url - url to mapbox tile in style json or resolved from source
+ * @param {string} urlStr - url to mapbox tile in style json or resolved from source
  * e.g. mapbox://tiles/mapbox.mapbox-streets-v7/1/0/1.vector.pbf
  * @param {string} token - mapbox public token
  */
-const normalizeMapboxTileURL = (url, token) => {
-    const urlObject = url.parse(url)
+const normalizeMapboxTileURL = (urlStr, token) => {
+    const urlObject = new URL(urlStr)
     urlObject.query = urlObject.query || {}
     urlObject.pathname = `/v4${urlObject.path}`
     urlObject.protocol = 'https'
     urlObject.host = 'a.tiles.mapbox.com'
     urlObject.query.access_token = token
-    return url.format(urlObject)
+    return urlObject.toString();
 }
 
 /**
@@ -79,8 +78,8 @@ const normalizeMapboxTileURL = (url, token) => {
  * @param {string} url - url to mapbox source in style json, e.g. "url": "mapbox://styles/mapbox/streets-v9"
  * @param {string} token - mapbox public token
  */
-export const normalizeMapboxStyleURL = (url, token) => {
-    const urlObject = url.parse(url)
+export const normalizeMapboxStyleURL = (urlStr, token) => {
+    const urlObject = new URL(urlStr)
     urlObject.query = {
         access_token: token,
         secure: true,
@@ -88,24 +87,24 @@ export const normalizeMapboxStyleURL = (url, token) => {
     urlObject.pathname = `styles/v1${urlObject.path}`
     urlObject.protocol = 'https'
     urlObject.host = 'api.mapbox.com'
-    return url.format(urlObject)
+    return urlObject.toString()
 }
 
 /**
  * Normalize a Mapbox sprite URL to a full URL
- * @param {string} url - url to mapbox sprite, e.g. "url": "mapbox://sprites/mapbox/streets-v9.png"
+ * @param {string} urlStr - url to mapbox sprite, e.g. "url": "mapbox://sprites/mapbox/streets-v9.png"
  * @param {string} token - mapbox public token
  *
  * Returns {string} - url, e.g., "https://api.mapbox.com/styles/v1/mapbox/streets-v9/sprite.png?access_token=<token>"
  */
-export const normalizeMapboxSpriteURL = (url, token) => {
-    const extMatch = /(\.png|\.json)$/g.exec(url)
-    const ratioMatch = /(@\d+x)\./g.exec(url)
+export const normalizeMapboxSpriteURL = (urlStr, token) => {
+    const extMatch = /(\.png|\.json)$/g.exec(urlStr)
+    const ratioMatch = /(@\d+x)\./g.exec(urlStr)
     const trimIndex = Math.min(
         ratioMatch != null ? ratioMatch.index : Infinity,
         extMatch.index
     )
-    const urlObject = url.parse(url.substring(0, trimIndex))
+    const urlObject = new URL(urlStr.substring(0, trimIndex))
 
     const extPart = extMatch[1]
     const ratioPart = ratioMatch != null ? ratioMatch[1] : ''
@@ -114,24 +113,24 @@ export const normalizeMapboxSpriteURL = (url, token) => {
     urlObject.pathname = `/styles/v1${urlObject.path}/sprite${ratioPart}${extPart}`
     urlObject.protocol = 'https'
     urlObject.host = 'api.mapbox.com'
-    return url.format(urlObject)
+    return urlObject.toString()
 }
 
 /**
  * Normalize a Mapbox glyph URL to a full URL
- * @param {string} url - url to mapbox sprite, e.g. "url": "mapbox://sprites/mapbox/streets-v9.png"
+ * @param {string} urlStr - url to mapbox sprite, e.g. "url": "mapbox://sprites/mapbox/streets-v9.png"
  * @param {string} token - mapbox public token
  *
  * Returns {string} - url, e.g., "https://api.mapbox.com/styles/v1/mapbox/streets-v9/sprite.png?access_token=<token>"
  */
-export const normalizeMapboxGlyphURL = (url, token) => {
-    const urlObject = url.parse(url)
+export const normalizeMapboxGlyphURL = (urlStr, token) => {
+    const urlObject = new URL(urlStr)
     urlObject.query = urlObject.query || {}
     urlObject.query.access_token = token
     urlObject.pathname = `/fonts/v1${urlObject.path}`
     urlObject.protocol = 'https'
     urlObject.host = 'api.mapbox.com'
-    return url.format(urlObject)
+    return urlObject.toString()
 }
 
 /**
@@ -547,7 +546,7 @@ export const render = (style, width = 1024, height = 1024, options) =>
                             getRemoteAsset(
                                 isMapbox
                                     ? normalizeMapboxGlyphURL(url, mapboxToken)
-                                    : url.parse(url),
+                                    : new URL(url),
                                 callback
                             )
                             break
@@ -557,7 +556,7 @@ export const render = (style, width = 1024, height = 1024, options) =>
                             getRemoteAsset(
                                 isMapbox
                                     ? normalizeMapboxSpriteURL(url, mapboxToken)
-                                    : url.parse(url),
+                                    : new URL(url),
                                 callback
                             )
                             break
@@ -567,14 +566,14 @@ export const render = (style, width = 1024, height = 1024, options) =>
                             getRemoteAsset(
                                 isMapbox
                                     ? normalizeMapboxSpriteURL(url, mapboxToken)
-                                    : url.parse(url),
+                                    : new URL(url),
                                 callback
                             )
                             break
                         }
                         case 7: {
                             // image source
-                            getRemoteAsset(url.parse(url), callback)
+                            getRemoteAsset(new URL(url), callback)
                             break
                         }
                         default: {
