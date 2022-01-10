@@ -320,7 +320,7 @@ var getRemoteTile = function getRemoteTile(url, callback) {
     encoding: null,
     gzip: true,
     headers: {
-      'Origin': 'http://localhost'
+      'Origin': 'http://localhost:3000'
     }
   }, function (err, res, data) {
     if (err) {
@@ -375,7 +375,7 @@ var getRemoteAsset = function getRemoteAsset(url, callback) {
     encoding: null,
     gzip: true,
     headers: {
-      'Origin': 'http://localhost'
+      'Origin': 'http://localhost:3000'
     }
   }, function (err, res, data) {
     if (err) {

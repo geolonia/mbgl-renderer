@@ -255,7 +255,7 @@ const getRemoteTile = (url, callback) => {
             encoding: null,
             gzip: true,
             headers: {
-                'Origin': 'http://localhost',
+                'Origin': 'http://localhost:3000',
             },
         },
         (err, res, data) => {
@@ -309,7 +309,7 @@ const getRemoteAsset = (url, callback) => {
             encoding: null,
             gzip: true,
             headers: {
-                'Origin': 'http://localhost',
+                'Origin': 'http://localhost:3000',
             },
         },
         (err, res, data) => {
